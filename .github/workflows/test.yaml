@@ -16,7 +16,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: go_bulk_insert
+          POSTGRES_DB: test_go_bulk_insert
         ports:
           - 5431:5432
         options: >-
