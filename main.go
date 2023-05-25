@@ -28,7 +28,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	redisAddr := os.Getenv("DEV_DB")
+	redisAddr := os.Getenv("REDIS_ADDRESS")
 	// check if valid redis address
 	clientOpts := asynq.RedisClientOpt{
 		Addr: redisAddr,
