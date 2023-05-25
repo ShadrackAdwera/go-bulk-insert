@@ -30,6 +30,7 @@ func main() {
 
 	redisAddr := os.Getenv("REDIS_ADDRESS")
 	// check if valid redis address
+
 	clientOpts := asynq.RedisClientOpt{
 		Addr: redisAddr,
 	}
@@ -40,17 +41,18 @@ func main() {
 
 	srv := api.NewServer(distro, store)
 
-	serverAddr := os.Getenv("SERVER_ADDRESS")
+	go startTaskProcessor(clientOpts, store)
 
+	serverAddr := os.Getenv("SERVER_ADDRESS")
 	srv.StartServer(serverAddr)
 
-	go startTaskProcessor(clientOpts, store)
 }
 
 func startTaskProcessor(opts asynq.RedisClientOpt, store db.TxStore) {
 	processor := worker.NewTaskServer(opts, store)
 
 	err := processor.Start()
+	zerolog.Info().Msg("connecting to REDIS processor . . . ")
 
 	if err != nil {
 		zerolog.Fatal().Err(err).Msg("error starting the redis task processor")

@@ -21,7 +21,7 @@ type DataTaskProcessor struct {
 func NewTaskServer(opts asynq.RedisClientOpt, store db.TxStore) TaskProcessor {
 	server := asynq.NewServer(opts, asynq.Config{
 		ErrorHandler: asynq.ErrorHandlerFunc(func(ctx context.Context, task *asynq.Task, err error) {
-			log.Err(err).Str("task_type", task.Type()).Bytes("payload", task.Payload()).Msg("error processing task . . ")
+			log.Err(err).Str("error", err.Error()).Str("task_type", task.Type()).Msg("error processing task . . ")
 		}),
 	})
 	return &DataTaskProcessor{
