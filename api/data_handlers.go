@@ -10,6 +10,7 @@ import (
 	db "github.com/ShadrackAdwera/go-bulk-insert/db/sqlc"
 	"github.com/ShadrackAdwera/go-bulk-insert/worker"
 	"github.com/gin-gonic/gin"
+	"github.com/hibiken/asynq"
 )
 
 type CovidFileData struct {
@@ -42,6 +43,18 @@ func (srv *Server) uploadFile(ctx *gin.Context) {
 	}
 
 	if err = json.Unmarshal(b, &covidData); err != nil {
+		ctx.JSON(http.StatusInternalServerError, errJSON(err))
+		return
+	}
+
+	opts := []asynq.Option{
+		asynq.MaxRetry(10),
+		asynq.ProcessIn(5),
+	}
+
+	err = srv.distro.DistributeData(ctx, &covidData, opts...)
+
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errJSON(err))
 		return
 	}
