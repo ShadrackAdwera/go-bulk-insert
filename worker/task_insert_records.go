@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	db "github.com/ShadrackAdwera/go-bulk-insert/db/sqlc"
 	"github.com/hibiken/asynq"
@@ -64,6 +65,9 @@ func (processor *DataTaskProcessor) TaskProcessData(ctx context.Context, task *a
 	totalRecords := len(payload)
 	currentBatch := 0
 
+	c, cancel := context.WithTimeout(ctx, time.Hour) // Set a timeout of 60 minutes
+	defer cancel()
+
 	for currentBatch < totalRecords {
 		end := currentBatch + batchSize
 		if end > totalRecords {
@@ -73,7 +77,7 @@ func (processor *DataTaskProcessor) TaskProcessData(ctx context.Context, task *a
 
 		// Execute the prepared statement for each record in the batch
 		for _, record := range batch {
-			_, err := processor.store.CreateCase(ctx, db.CreateCaseParams{
+			_, err := processor.store.CreateCaseTx(c, db.CreateCaseParams{
 				DateRep:                 record.DateRep,
 				Day:                     int32(record.Day),
 				Month:                   int32(record.Month),
@@ -94,7 +98,7 @@ func (processor *DataTaskProcessor) TaskProcessData(ctx context.Context, task *a
 		}
 
 		currentBatch += batchSize
-		log.Info().Int64("inserted ", int64(currentBatch)).Int64("records out of ", int64(totalRecords))
+		fmt.Printf("Inserted %d records out of %d\n", currentBatch, totalRecords)
 	}
 	return nil
 }
