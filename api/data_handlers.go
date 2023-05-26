@@ -48,8 +48,7 @@ func (srv *Server) uploadFile(ctx *gin.Context) {
 	}
 
 	opts := []asynq.Option{
-		asynq.MaxRetry(10),
-		asynq.ProcessIn(5),
+		asynq.MaxRetry(5),
 	}
 
 	err = srv.distro.DistributeData(ctx, &covidData, opts...)
@@ -59,7 +58,7 @@ func (srv *Server) uploadFile(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("bytes read %d \n", len(b))})
+	ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("items found %d \n", len(covidData))})
 }
 
 type GetDataArgs struct {
