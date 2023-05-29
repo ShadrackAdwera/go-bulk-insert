@@ -51,11 +51,23 @@ func (srv *Server) uploadFile(ctx *gin.Context) {
 		asynq.MaxRetry(5),
 	}
 
-	err = srv.distro.DistributeData(ctx, &covidData, opts...)
+	patterns := []string{
+		worker.TaskInsertData, worker.TaskInsertDataV2,
+	}
 
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errJSON(err))
-		return
+	for i, p := range patterns {
+		var dt []worker.CovidData
+		if i == 0 {
+			dt = covidData[:len(covidData)/len(patterns)]
+		} else {
+			dt = covidData[len(covidData)/len(patterns):]
+		}
+		err = srv.distro.DistributeData(ctx, &dt, p, opts...)
+
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errJSON(err))
+			return
+		}
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("items found %d \n", len(covidData))})

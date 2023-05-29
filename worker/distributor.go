@@ -7,7 +7,7 @@ import (
 )
 
 type TaskDistributor interface {
-	DistributeData(ctx context.Context, payload *[]CovidData, opts ...asynq.Option) error
+	DistributeData(ctx context.Context, payload *[]CovidData, QueueKey string, opts ...asynq.Option) error
 }
 
 type DataTaskDistributor struct {

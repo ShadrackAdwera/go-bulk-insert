@@ -27,15 +27,16 @@ type CovidData struct {
 }
 
 const TaskInsertData = "task:insert_data"
+const TaskInsertDataV2 = "task:insert_data:v2"
 
-func (distro *DataTaskDistributor) DistributeData(ctx context.Context, payload *[]CovidData, opts ...asynq.Option) error {
+func (distro *DataTaskDistributor) DistributeData(ctx context.Context, payload *[]CovidData, QueueKey string, opts ...asynq.Option) error {
 	jsonPayload, err := json.Marshal(payload)
 
 	if err != nil {
 		return fmt.Errorf("failed to marshall json body")
 	}
 
-	taskInsert := asynq.NewTask(TaskInsertData, jsonPayload, opts...)
+	taskInsert := asynq.NewTask(QueueKey, jsonPayload, opts...)
 
 	info, err := distro.client.EnqueueContext(ctx, taskInsert)
 
@@ -98,7 +99,7 @@ func (processor *DataTaskProcessor) TaskProcessData(ctx context.Context, task *a
 		}
 
 		currentBatch += batchSize
-		fmt.Printf("Inserted %d records out of %d\n", currentBatch, totalRecords)
+		fmt.Printf("Type: %s, Inserted %d records out of %d\n", task.Type(), currentBatch, totalRecords)
 	}
 	return nil
 }
