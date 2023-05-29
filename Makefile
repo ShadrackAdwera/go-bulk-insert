@@ -1,4 +1,4 @@
-DB_URL=postgresql://postgres:password@localhost:5431/test_go_bulk_insert?sslmode=disable
+DB_URL=postgresql://postgres:password@localhost:5431/go_bulk_insert?sslmode=disable
 
 migrate_create:
 	migrate create -ext sql -dir db/migrations -seq ${MIGRATE_NAME}

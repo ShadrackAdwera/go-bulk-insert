@@ -33,6 +33,7 @@ func (processor *DataTaskProcessor) Start() error {
 	mux := asynq.NewServeMux()
 
 	mux.HandleFunc(TaskInsertData, processor.TaskProcessData)
+	mux.HandleFunc(TaskInsertDataV2, processor.TaskProcessData)
 
 	return processor.server.Start(mux)
 }
