@@ -1,7 +1,7 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"log"
 	"os"
 
@@ -9,10 +9,9 @@ import (
 	db "github.com/ShadrackAdwera/go-bulk-insert/db/sqlc"
 	"github.com/ShadrackAdwera/go-bulk-insert/worker"
 	"github.com/hibiken/asynq"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	zerolog "github.com/rs/zerolog/log"
-
-	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -22,7 +21,7 @@ func main() {
 
 	url := os.Getenv("DEV_DB")
 	// check if valid URL
-	conn, err := sql.Open("postgres", url)
+	pool, err := pgxpool.New(context.Background(), url)
 
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -37,7 +36,7 @@ func main() {
 
 	distro := worker.NewTaskDistributor(clientOpts)
 
-	store := db.NewStore(conn)
+	store := db.NewStore(pool)
 
 	srv := api.NewServer(distro, store)
 
