@@ -30,7 +30,7 @@ type CreateCaseParams struct {
 }
 
 func (q *Queries) CreateCase(ctx context.Context, arg CreateCaseParams) (EcdeCase, error) {
-	row := q.queryRow(ctx, q.createCaseStmt, createCase,
+	row := q.db.QueryRow(ctx, createCase,
 		arg.DateRep,
 		arg.Day,
 		arg.Month,
@@ -69,7 +69,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetCase(ctx context.Context, id int64) (EcdeCase, error) {
-	row := q.queryRow(ctx, q.getCaseStmt, getCase, id)
+	row := q.db.QueryRow(ctx, getCase, id)
 	var i EcdeCase
 	err := row.Scan(
 		&i.ID,
@@ -102,12 +102,12 @@ type ListCasesParams struct {
 }
 
 func (q *Queries) ListCases(ctx context.Context, arg ListCasesParams) ([]EcdeCase, error) {
-	rows, err := q.query(ctx, q.listCasesStmt, listCases, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listCases, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []EcdeCase
+	items := []EcdeCase{}
 	for rows.Next() {
 		var i EcdeCase
 		if err := rows.Scan(
@@ -128,9 +128,6 @@ func (q *Queries) ListCases(ctx context.Context, arg ListCasesParams) ([]EcdeCas
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

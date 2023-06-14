@@ -2,8 +2,9 @@ package db
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type TxStore interface {
@@ -13,19 +14,19 @@ type TxStore interface {
 
 type Store struct {
 	*Queries
-	db *sql.DB
+	pool *pgxpool.Pool
 }
 
-func NewStore(db *sql.DB) TxStore {
+func NewStore(connPool *pgxpool.Pool) TxStore {
 	return &Store{
-		db:      db,
-		Queries: New(db),
+		pool:    connPool,
+		Queries: New(connPool),
 	}
 }
 
-func (s *Store) execTx(context context.Context, fn func(*Queries) error) error {
-	tx, err := s.db.BeginTx(context, &sql.TxOptions{
-		Isolation: sql.LevelReadCommitted,
+func (s *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{
+		IsoLevel: pgx.ReadCommitted,
 	})
 
 	if err != nil {
@@ -36,10 +37,10 @@ func (s *Store) execTx(context context.Context, fn func(*Queries) error) error {
 	err = fn(q)
 
 	if err != nil {
-		if err == tx.Rollback() {
-			return fmt.Errorf(err.Error())
+		if err = tx.Rollback(ctx); err != nil {
+			return tx.Rollback(ctx)
 		}
 		return err
 	}
-	return tx.Commit()
+	return tx.Commit(ctx)
 }
